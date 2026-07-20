@@ -1,6 +1,6 @@
-# @veniceai/mcp-server
+# Medhā MCP
 
-> Model Context Protocol server for the **Venice API** - uncensored, private AI for any MCP host (Claude Desktop, Cursor, ChatGPT, LM Studio, Continue, LibreChat, Open WebUI, AnythingLLM, Jan, Le Chat).
+> Operator-tuned fork of [@veniceai/mcp-server](https://github.com/veniceai/venice-mcp-server). Same 31 Venice primitives; curated presets for chat/image/video/audio/music baked in via env defaults. Use from any MCP host (Claude Desktop, Claude Code, Cursor, Codex CLI, Hermes, Jiva, Rati, LM Studio, Continue, LibreChat, Open WebUI, AnythingLLM, Jan, Le Chat).
 
 [![npm](https://img.shields.io/npm/v/@veniceai/mcp-server.svg)](https://www.npmjs.com/package/@veniceai/mcp-server)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)

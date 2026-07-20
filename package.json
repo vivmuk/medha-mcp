@@ -1,13 +1,13 @@
 {
-  "name": "@veniceai/mcp-server",
-  "version": "0.2.0",
-  "description": "Model Context Protocol server for Venice.ai — uncensored, private, crypto-native AI inference for Claude, ChatGPT, Cursor and any MCP host. Community-maintained. Provided as-is, with no warranty or SLA from Venice AI. Use at your own risk.",
+  "name": "@medha/mcp-server",
+  "version": "0.3.0-medha",
+  "description": "Medhā is an operator-tuned fork of @veniceai/mcp-server. Same 31 Venice primitives; curated presets for chat/image/video/audio/music baked in via env defaults; presets://favorites resource for agent discovery. Community-maintained. Provided as-is, with no warranty or SLA from Venice AI. Use at your own risk.",
   "license": "MIT",
-  "author": "Venice AI",
-  "homepage": "https://venice.ai",
+  "author": "Vivek M (Medhā)",
+  "homepage": "https://github.com/vivmuk/medha-mcp",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/veniceai/venice-mcp-server.git"
+    "url": "git+https://github.com/vivmuk/medha-mcp.git"
   },
   "type": "module",
   "main": "./dist/server.js",
