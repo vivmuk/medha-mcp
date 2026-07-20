@@ -4,6 +4,7 @@ import { randomUUID, timingSafeEqual } from 'node:crypto'
 import { isIP } from 'node:net'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { buildServer } from '../server.js'
+import { logMcpHttpCall } from '../logging.js'
 
 const DEFAULT_MAX_HTTP_SESSIONS = 100
 const DEFAULT_SESSION_TTL_MS = 30 * 60 * 1000
@@ -141,7 +142,10 @@ export async function runHttp(opts: { port?: number; host?: string } = {}): Prom
       }
 
       entry.lastSeen = Date.now()
-      await entry.transport.handleRequest(req, res, req.body)
+
+      logMcpHttpCall(req as Request, res as Response, async () => {
+        await entry!.transport.handleRequest(req as Request, res as Response, req.body)
+      })
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('[venice-mcp] /mcp error', err)

@@ -3,6 +3,7 @@ import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { isIP } from 'node:net';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { buildServer } from '../server.js';
+import { logMcpHttpCall } from '../logging.js';
 const DEFAULT_MAX_HTTP_SESSIONS = 100;
 const DEFAULT_SESSION_TTL_MS = 30 * 60 * 1000;
 const MIN_EXPOSED_AUTH_TOKEN_LENGTH = 16;
@@ -119,7 +120,9 @@ export async function runHttp(opts = {}) {
                 entry = { transport: newTransport, lastSeen: Date.now() };
             }
             entry.lastSeen = Date.now();
-            await entry.transport.handleRequest(req, res, req.body);
+            logMcpHttpCall(req, res, async () => {
+                await entry.transport.handleRequest(req, res, req.body);
+            });
         }
         catch (err) {
             // eslint-disable-next-line no-console

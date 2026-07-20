@@ -1,6 +1,6 @@
 {
   "name": "@medha/mcp-server",
-  "version": "0.4.0-medha",
+  "version": "0.5.0-medha",
   "description": "Medhā is an operator-tuned fork of @veniceai/mcp-server. Same 31 Venice primitives; curated presets for chat/image/video/audio/music baked in via env defaults; presets://favorites resource for agent discovery. Community-maintained. Provided as-is, with no warranty or SLA from Venice AI. Use at your own risk.",
   "license": "MIT",
   "author": "Vivek M (Medhā)",
@@ -61,7 +61,9 @@
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.4",
+    "@types/pg": "^8.20.0",
     "express": "^4.21.2",
+    "pg": "^8.22.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
