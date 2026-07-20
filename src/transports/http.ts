@@ -143,7 +143,7 @@ export async function runHttp(opts: { port?: number; host?: string } = {}): Prom
 
       entry.lastSeen = Date.now()
 
-      logMcpHttpCall(req as Request, res as Response, async () => {
+      logMcpHttpCall(req as Request, entry.transport as unknown as { send: (...a: unknown[]) => Promise<void> | void }, async () => {
         await entry!.transport.handleRequest(req as Request, res as Response, req.body)
       })
     } catch (err) {

@@ -117,11 +117,11 @@ export interface CallRecord {
   tool_name: string | null
   method: string
   request_json: unknown
-  response_summary?: unknown
-  status_code?: number
+  response_summary: unknown | null
+  status_code: number
   latency_ms: number
-  venice_call_id?: string | null
-  error_message?: string | null
+  venice_call_id: string | null
+  error_message: string | null
 }
 
 export async function insertCall(rec: CallRecord): Promise<number | null> {

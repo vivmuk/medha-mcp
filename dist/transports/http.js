@@ -120,7 +120,7 @@ export async function runHttp(opts = {}) {
                 entry = { transport: newTransport, lastSeen: Date.now() };
             }
             entry.lastSeen = Date.now();
-            logMcpHttpCall(req, res, async () => {
+            logMcpHttpCall(req, entry.transport, async () => {
                 await entry.transport.handleRequest(req, res, req.body);
             });
         }
