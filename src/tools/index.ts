@@ -27,6 +27,7 @@ import type { VeniceClient } from '../venice-client.js'
 import type { Config } from '../config.js'
 import { formatToolError, truncate } from '../format.js'
 import { fetchUploadSource } from './remote-fetch.js'
+import { decorateDescription } from '../tool-descriptions.js'
 
 /**
  * Sniff the MIME type of a base64-encoded image from its magic bytes.
@@ -1029,5 +1030,12 @@ export function buildTools(client: VeniceClient, cfg: Config): ToolDef[] {
     },
   ]
 
-  return tools
+  // Apply Medhā operator preferences to every tool description. The overlay
+  // is informational only — agents can still pass any model via "model="
+  // and the upstream handler will forward it to Venice. The decoration
+  // reads from src/presets.ts (TOOL_PREFS map).
+  return tools.map((t) => ({
+    ...t,
+    description: decorateDescription(t.name, t.description),
+  }))
 }

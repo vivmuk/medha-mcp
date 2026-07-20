@@ -25,6 +25,33 @@
 import { z } from 'zod';
 import { formatToolError, truncate } from '../format.js';
 import { fetchUploadSource } from './remote-fetch.js';
+import { decorateDescription } from '../tool-descriptions.js';
+/**
+ * Sniff the MIME type of a base64-encoded image from its magic bytes.
+ * Falls back to 'image/png' if the format is unrecognised.
+ */
+function detectBase64ImageMime(b64) {
+    const header = b64.slice(0, 16);
+    const bytes = Buffer.from(header, 'base64');
+    // WebP: RIFF????WEBP
+    if (bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46 &&
+        bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50) {
+        return 'image/webp';
+    }
+    // PNG: \x89PNG
+    if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) {
+        return 'image/png';
+    }
+    // JPEG: \xFF\xD8
+    if (bytes[0] === 0xff && bytes[1] === 0xd8) {
+        return 'image/jpeg';
+    }
+    // GIF: GIF8
+    if (bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x38) {
+        return 'image/gif';
+    }
+    return 'image/png';
+}
 const ok = (text, structured) => ({
     content: [{ type: 'text', text }],
     ...(structured ? { structuredContent: structured } : {}),
@@ -153,8 +180,9 @@ export function buildTools(client, cfg) {
                     });
                     // Default Venice response: { id, images: [<base64>] }
                     if (resp.images && resp.images.length > 0 && typeof resp.images[0] === 'string') {
+                        const mimeType = detectBase64ImageMime(resp.images[0]);
                         return {
-                            content: [{ type: 'image', data: resp.images[0], mimeType: 'image/png' }],
+                            content: [{ type: 'image', data: resp.images[0], mimeType }],
                             structuredContent: { id: resp.id, count: resp.images.length },
                         };
                     }
@@ -170,7 +198,8 @@ export function buildTools(client, cfg) {
                         };
                     }
                     if (first?.b64_json) {
-                        return { content: [{ type: 'image', data: first.b64_json, mimeType: 'image/png' }] };
+                        const mimeType = detectBase64ImageMime(first.b64_json);
+                        return { content: [{ type: 'image', data: first.b64_json, mimeType }] };
                     }
                     return fail('Venice returned no usable image payload.');
                 }
@@ -307,14 +336,30 @@ export function buildTools(client, cfg) {
         {
             name: 'venice_video_generate',
             title: 'Venice Video Queue',
-            description: `Queue a video generation. Supports Sora 2, Veo 3.1, Kling, Wan, LTX 2, Seedance, Runway Gen-4, and others. Pick a specific id like "veo3.1-fast-text-to-video", "veo3.1-fast-image-to-video", "kling-2.6-pro-text-to-video", "wan-2.6-text-to-video" etc.${nsfwNote}${X402_OK} Returns { model, queue_id }; poll with venice_video_status. NOTE: 'duration' is a string enum like '4s' / '6s' / '8s' (model-specific, see model card).`,
+            description: `Queue a video generation. Supports Sora 2, Veo 3.1, Kling, Wan, LTX 2, Seedance, Runway Gen-4, and others. Pick a specific id like "veo3.1-fast-text-to-video", "veo3.1-fast-image-to-video", "kling-2.6-pro-text-to-video", "wan-2.6-text-to-video", "seedance-2-0-r2v" etc.${nsfwNote}${X402_OK} Returns { model, queue_id }; poll with venice_video_status. NOTE: 'duration' is a string enum like '4s' / '6s' / '8s' (model-specific, see model card).`,
             inputSchema: {
-                prompt: z.string().min(1).max(4000),
+                prompt: z.string().min(1).max(4096),
                 model: z.string().describe('Required. Full model id, e.g. "veo3.1-fast-text-to-video".'),
                 duration: z.string().optional().describe('Duration as model-specific string enum, e.g. "4s", "6s", "8s". See GET /v1/models/:id/card.'),
-                aspect_ratio: z.enum(['16:9', '9:16', '1:1']).optional(),
+                aspect_ratio: z.enum(['16:9', '9:16', '1:1', '2:3', '3:2', '3:4', '4:3', '21:9']).optional(),
                 seed: z.number().int().optional(),
-                image_url: z.string().url().optional().describe('Required for *-image-to-video models; starting frame URL or data URL.'),
+                image_url: z.string().url().optional().describe('For image-to-video models: starting frame. URL or data URL.'),
+                end_image_url: z.string().url().optional().describe('For models that support end frames or transitions. URL or data URL.'),
+                video_url: z.string().url().optional().describe('For video-to-video models (e.g. seedance-2-0-r2v): input video. URL or data URL. Supported: MP4, MOV, WebM.'),
+                audio_url: z.string().url().optional().describe('For models that support audio input: background music. URL or data URL. Supported: WAV, MP3. Max 30s, 15MB.'),
+                reference_image_urls: z.array(z.string().url()).max(9).optional().describe('For models with reference image support: up to 9 images for character/style consistency. Each a URL or data URL.'),
+                reference_video_urls: z.array(z.string().url()).max(3).optional().describe('For Seedance 2.0 R2V and similar: up to 3 reference video clips to inherit subject motion, camera movement, and style. Per-clip 2–15s, MP4/MOV, ≤50MB; aggregate ≤15s. Each a URL or data URL.'),
+                reference_audio_urls: z.array(z.string().url()).max(3).optional().describe('For Seedance 2.0 R2V and similar: up to 3 reference audio clips for vocal timbre, narration, or sound effects. Per-clip 2–15s, WAV/MP3; aggregate ≤15s. Must be paired with at least one reference image or video. Each a URL or data URL.'),
+                elements: z.array(z.object({
+                    frontal_image_url: z.string().url().optional(),
+                    reference_image_urls: z.array(z.string().url()).max(3).optional(),
+                    video_url: z.string().url().optional(),
+                })).max(4).optional().describe('For Kling O3 R2V and similar: up to 4 character/object elements. Reference in prompt as @Element1, @Element2, etc.'),
+                scene_image_urls: z.array(z.string().url()).max(4).optional().describe('For models with advanced element support: up to 4 scene reference images. Reference in prompt as @Image1, @Image2, etc.'),
+                negative_prompt: z.string().max(4096).optional().describe('Negative prompt (what to avoid). Supported by Seedance and other models.'),
+                resolution: z.string().optional().describe('Output resolution, e.g. "720p", "1080p", "4k". Model-specific; see model card.'),
+                upscale_factor: z.number().int().optional().describe('For upscale models only: 1 = quality enhance, 2 = double resolution, 4 = quadruple.'),
+                audio: z.boolean().optional().describe('Enable or disable audio generation for models that support it. Defaults to true.'),
             },
             handler: async (args) => {
                 try {
@@ -892,6 +937,13 @@ export function buildTools(client, cfg) {
             },
         },
     ];
-    return tools;
+    // Apply Medhā operator preferences to every tool description. The overlay
+    // is informational only — agents can still pass any model via "model="
+    // and the upstream handler will forward it to Venice. The decoration
+    // reads from src/presets.ts (TOOL_PREFS map).
+    return tools.map((t) => ({
+        ...t,
+        description: decorateDescription(t.name, t.description),
+    }));
 }
 //# sourceMappingURL=index.js.map

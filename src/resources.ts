@@ -4,6 +4,7 @@
  */
 import type { VeniceClient } from './venice-client.js'
 import { formatToolError } from './format.js'
+import { FAVORITES } from './presets.js'
 
 export interface ResourceDef {
   uri: string
@@ -80,6 +81,19 @@ export function buildResources(client: VeniceClient): ResourceDef[] {
           }
         }
       },
+    },
+    // ─── MEDHĀ-OPERATOR ONLY ────────────────────────────────────────────
+    {
+      uri: 'medha://favorites',
+      name: 'Medhā operator favorites',
+      description:
+        'Medhā operator-curated defaults — a single canonical JSON document listing the operator’s preferred model per tool + per-domain (reasoning / coding / roleplay / vision / longctx). Fetch this in any session to know what the operator prefers before picking a model.',
+      mimeType: 'application/json',
+      read: async () => ({
+        uri: 'medha://favorites',
+        mimeType: 'application/json',
+        text: JSON.stringify(FAVORITES, null, 2),
+      }),
     },
   ]
 }

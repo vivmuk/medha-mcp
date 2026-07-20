@@ -29,9 +29,10 @@ export function buildServer(opts: BuildOptions = {}): McpServer {
         logging: {},
       },
       instructions: [
-        'Venice MCP exposes uncensored, privacy-respecting AI inference (LLM, image, video, TTS, ASR, music) via Venice.ai.',
-        'Auth: set VENICE_API_KEY in env, OR forward x402 X-PAYMENT challenges from the client.',
-        'See https://docs.venice.ai/mcp for full reference.',
+        'Medhā MCP is an operator-tuned fork of @veniceai/mcp-server.',
+        'It exposes 31 Venice primitives (chat / image / video / TTS / ASR / music / web / crypto / x402 / characters) plus 1 operator-curated resource (medha://favorites) and 4 workflow prompts (medha_music_video_brief, medha_podcast_pipeline, medha_dashboard_poster, medha_character_dossier).',
+        'Auth: 4 components — (1) the Medhā bearer (VENICE_MCP_AUTH_TOKEN) for /mcp on Railway, (2) the operator Venice key (VENICE_API_KEY) baked in the container, (3) optional per-session SIWX wallet (VENICE_SIWX_TOKEN), (4) operator-curated favorites baked into tool descriptions.',
+        'Operator preferences are HINTS, not hard enforced. Pass model="<any-venice-id>" to override per call. If in doubt, fetch the medha://favorites resource for the canonical defaults table.',
       ].join(' '),
     }
   )

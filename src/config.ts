@@ -68,7 +68,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     defaultAsrModel: env.VENICE_DEFAULT_ASR_MODEL ?? 'openai/whisper-large-v3',
     timeoutMs: parseTimeoutMs(env.VENICE_HTTP_TIMEOUT_MS),
     enableNsfw: env.VENICE_DISABLE_NSFW !== '1',
-    serverName: '@veniceai/mcp-server',
-    serverVersion: '0.2.0',
+    serverName: env.MEDHA_SERVER_NAME?.trim() || '@medha/mcp-server',
+    serverVersion: env.MEDHA_SERVER_VERSION?.trim() || '0.4.0-medha',
   }
 }
