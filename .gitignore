@@ -19,3 +19,6 @@ coverage/
 # Local secrets — never commit operator env files.
 *.env
 !dist-cli.js
+
+# Operator-only DB inspection scripts (keep out of public repo)
+check_*.mjs
