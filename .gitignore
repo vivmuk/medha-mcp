@@ -1,14 +1,21 @@
+# Local build artifacts — never commit.
 node_modules/
 dist/
-*.log
-.env
-.env.*
+
+# Test outputs
+.nyc_output/
+coverage/
+
+# OS junk
 .DS_Store
-*.tsbuildinfo
+*.swp
+*~
+.fuse_*
 
-# E2E test wallet — contains live Base mainnet private key. NEVER commit.
-.e2e-wallet.json
-test/e2e/.e2e-wallet.json
+# IDE folders
+.idea/
+.vscode/
 
-# E2E test output — regenerated on every run.
-test/e2e/last-report.json
+# Local secrets — never commit operator env files.
+*.env
+!dist-cli.js
