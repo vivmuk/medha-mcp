@@ -13,9 +13,9 @@ This document lists the operator-curated defaults that Medhā MCP bakes into its
 
 | Model | When | Cost (USD/M in/out) | Rationale |
 |---|---|---|---|
-| `minimax-m3-preview` | Default chat, 524K context, agent runs, M3-preview tier | 0.30 / 1.20 | Cheap-and-long — fits a 500K-token conversation for the price of a 50K one on premium. Operator's daily-drive. |
-| `claude-sonnet-4-6` | Reserved for hard reasoning + thinker step | 3.60 / 18.00 | Premium reasoning when nuance matters more than cost (podcast scripts, character dossiers). |
-| `qwen-3-7-max` | 1M context, multilingual, agent runs that exceed 524K | 2.70 / 8.05 | When `minimax-m3-preview`'s 524K context exhausts, escalate to Qwen Max's 1M. |
+| `minimax-m3-preview` | Default chat, 524K context, agent runs, M3-preview tier | 0.30 / 1.20 | Cheap-and-long — fits a 500K-token conversation for the price of a 50K one on premium. Operator's daily drive. |
+| `qwen-3-7-max` | Hard reasoning, 1M context, multilingual, agent runs that exceed 524K | 2.70 / 8.05 | When `minimax-m3-preview`'s 524K context exhausts, escalate to Qwen Max's 1M. Premium reasoning without Claude/GPT. |
+| `gemini-3-1-pro-preview` | Premium 1M + reasoning | — | When the task is too ambiguous for `minimax-m3-preview` alone. |
 | `venice-uncensored-role-play` | Character work, narrative voice | 0.50 / 2.00 | When the system prompt is a persistent character (Medhā dossier prompt). |
 
 ## Coding
@@ -23,8 +23,7 @@ This document lists the operator-curated defaults that Medhā MCP bakes into its
 | Model | When | Rationale |
 |---|---|---|
 | `qwen3-coder-480b-a35b-instruct-turbo` | Default | Purpose-built 480B coder; cheap large-context. |
-| `openai-gpt-oss-120b` | Cheap alt / when mass edits | 0.07 / 0.30 — 30× cheaper than Claude opus for similar edits. |
-| `claude-sonnet-4-6` | Architectural design refactors / plan authority | When the task is too ambiguous for `qwen3-coder` alone. |
+| `minimax-m3-preview` | Cheap alt / when mass edits | 0.30 / 1.20 — general-purpose fallback for code. |
 
 ## Roleplay / character
 
@@ -38,8 +37,7 @@ This document lists the operator-curated defaults that Medhā MCP bakes into its
 | Model | When | Cost |
 |---|---|---|
 | `venice-uncensored-1-2` | Default for image understanding; supportsVision + cheap | 0.20 / 0.90 |
-| `minimax-m3-preview` | Long-context vision (524K tokens of image+text possible) | 0.30 / 1.20 |
-| `claude-sonnet-4-6` | Premium vision + reasoning (write a structured description for downstream code) | 3.60 / 18.00 |
+| `minimax-m3-preview` | Long-context vision (524K tokens of image+text possible) + premium vision | 0.30 / 1.20 |
 
 ## Long context (≥500K tokens)
 
@@ -57,7 +55,6 @@ This document lists the operator-curated defaults that Medhā MCP bakes into its
 | `qwen-image` | Alt when flux budget tight | Open-source-grade. |
 | `lustify-sdxl` | Character / erotic illustration | Operator permits NSFW defaults. |
 | `nano-banana-pro` | Photoreal | When "professional photography" wording in prompt. |
-| `gpt-image-1` | OpenAI-style text-in-prompt | |
 | `anime-wai` | Anime-style / stylization | |
 
 ## Image editing
@@ -146,8 +143,8 @@ Always quote first via `venice_audio_quote({ duration_seconds: <s> })`.
 | Prompt | Music | Image | Video | Chat | TTS | ASR |
 |---|---|---|---|---|---|---|
 | `medha_music_video_brief` | `ace-step-15` | `flux-2-pro` (×4-12) | `ltx-2` (per frame, 4-6s) | `(script polish on demand)` | `tts-kokoro` (optional) | – |
-| `medha_podcast_pipeline` | – | – | – | `claude-sonnet-4-6` | `tts-kokoro` | – |
-| `medha_dashboard_poster` | – | `flux-2-pro` (1×) | – | `claude-sonnet-4-6` (prompt refinement) | – | – |
+| `medha_podcast_pipeline` | – | – | – | `qwen-3-7-max` | `tts-kokoro` | – |
+| `medha_dashboard_poster` | – | `flux-2-pro` (1×) | – | `qwen-3-7-max` (prompt refinement) | – | – |
 | `medha_character_dossier` | – | `flux-2-pro` (optional avatar) | – | `venice-uncensored-role-play` | `tts-kokoro` (sample) | – |
 
 ## How to override
@@ -155,8 +152,8 @@ Always quote first via `venice_audio_quote({ duration_seconds: <s> })`.
 Any of `medhā`'s `31` tools accepts a `model=` parameter that overrides the preset. Operators can also flip env defaults via `railway variable set --service medha --skip-deploys`:
 
 ```bash
-# Rotate chat reasoning to Claude Opus when cost is no object
-railway variable set --service medha --skip-deploys "VENICE_DEFAULT_CHAT_MODEL=claude-opus-4-6"
+# Rotate chat reasoning to Qwen Max when cost is no object
+railway variable set --service medha --skip-deploys "VENICE_DEFAULT_CHAT_MODEL=qwen-3-7-max"
 railway service redeploy --service medha --yes
 
 # Pin image to a private model

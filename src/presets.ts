@@ -15,8 +15,12 @@
  * The default-model ENV vars (VENICE_DEFAULT_CHAT_MODEL etc.) are the
  * RUNTIME defaults the server uses when the agent omits `model=`. The
  * presets here are the AGENT-FACING hints shown in tool descriptions.
- * Keep them in sync: i.e. if you set `VENICE_DEFAULT_CHAT_MODEL=claude-sonnet-4-6`,
- * then `TOOL_PREFS.venice_chat` should also start with "claude-sonnet-4-6".
+ * Keep them in sync: i.e. if you set `VENICE_DEFAULT_CHAT_MODEL=minimax-m3-preview`,
+ * then `TOOL_PREFS.venice_chat` should also start with "minimax-m3-preview".
+ *
+ * NOTE: Claude and GPT models are EXCLUDED from operator preferences by policy.
+ * The Venice API key must never be used for claude-* or gpt-* / openai-gpt-* models
+ * unless the operator explicitly requests one by name.
  */
 export interface ToolPref {
   /** Default model the operator expects to be tried first. */
@@ -31,12 +35,12 @@ export const TOOL_PREFS: Record<string, ToolPref> = {
   // ─── TEXT / REASONING ──────────────────────────────────────────────────
   venice_chat: {
     defaultModel: 'minimax-m3-preview',
-    alternates: ['claude-sonnet-4-6', 'qwen-3-7-max', 'venice-uncensored-role-play'],
-    hint: 'cheap+long (524K ctx) → premium reasoning → 1M ctx → character voice.',
+    alternates: ['qwen-3-7-max', 'venice-uncensored-role-play', 'gemini-3-1-pro-preview'],
+    hint: 'cheap+long (524K ctx) → 1M ctx → character voice → premium reasoning.',
   },
   venice_responses: {
     defaultModel: 'minimax-m3-preview',
-    alternates: ['claude-sonnet-4-6'],
+    alternates: ['qwen-3-7-max'],
     hint: 'OpenAI Responses API; agentic tool-use loop supported.',
   },
   venice_embeddings: {
@@ -48,7 +52,7 @@ export const TOOL_PREFS: Record<string, ToolPref> = {
   // ─── IMAGE ─────────────────────────────────────────────────────────────
   venice_image_generate: {
     defaultModel: 'flux-2-pro',
-    alternates: ['qwen-image', 'lustify-sdxl', 'nano-banana-pro', 'gpt-image-1', 'anime-wai'],
+    alternates: ['qwen-image', 'lustify-sdxl', 'nano-banana-pro', 'anime-wai'],
     hint: 'Operator default is flux-2-pro. Use nano-banana-pro for photoreal, anime-wai for stylization, lustify-sdxl for character work.',
   },
   venice_image_edit: {
@@ -172,10 +176,10 @@ export const FAVORITES = {
     'Medhā operator-curated defaults — single canonical set the agent should use unless the task explicitly says otherwise.',
   server: '@medha/mcp-server',
   environmentHints: {
-    reasoning: 'Use claude-sonnet-4-6 for hard reasoning, minimax-m3-preview for cheap+long.',
-    coding: 'qwen3-coder-480b-a35b-instruct-turbo first; openai-gpt-oss-120b as cheap alt.',
+    reasoning: 'Use qwen-3-7-max for hard reasoning, minimax-m3-preview for cheap+long.',
+    coding: 'qwen3-coder-480b-a35b-instruct-turbo first; minimax-m3-preview as cheap alt.',
     roleplay: 'venice-uncensored-role-play first.',
-    vision: 'venice-uncensored-1-2 first; claude-sonnet-4-6 for premium vision.',
+    vision: 'venice-uncensored-1-2 first; minimax-m3-preview for general vision.',
     longctx: 'qwen-3-7-max (1M ctx) first; minimax-m3-preview (524K) as fallback.',
   },
   toolsByName: TOOL_PREFS,

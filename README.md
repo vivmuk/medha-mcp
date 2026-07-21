@@ -189,8 +189,8 @@ Beyond the upstream 3 (`uncensored-research`, `nsfw-creative-writing`, `image-st
 | Prompt | Workflow | Default models |
 |---|---|---|
 | `medha_music_video_brief` | Quote → music gen → 4-12 image frames → video interpolation per frame → optional TTS. | `ace-step-15` (music) · `flux-2-pro` (image) · `ltx-2` (video) · `tts-kokoro` (TTS) |
-| `medha_podcast_pipeline` | Web search → scrape top URLs → script via chat → TTS. | `claude-sonnet-4-6` (chat) · `tts-kokoro` (TTS) |
-| `medha_dashboard_poster` | Chat-compose prompt → flux-2-pro → optional bg-remove → optional 2× upscale. | `claude-sonnet-4-6` (chat) · `flux-2-pro` (image) |
+| `medha_podcast_pipeline` | Web search → scrape top URLs → script via chat → TTS. | `qwen-3-7-max` (chat) · `tts-kokoro` (TTS) |
+| `medha_dashboard_poster` | Chat-compose prompt → flux-2-pro → optional bg-remove → optional 2× upscale. | `qwen-3-7-max` (chat) · `flux-2-pro` (image) |
 | `medha_character_dossier` | Dossier + system prompt via roleplay chat → TTS sample → optional avatar image. | `venice-uncensored-role-play` (chat) · `tts-kokoro` (TTS) · `flux-2-pro` (image) |
 
 When the agent invokes one of these prompts, MCP returns a single user-role message that lays out the recommended tool-call sequence with the operator's preferred models. The agent then orchestrates from there.

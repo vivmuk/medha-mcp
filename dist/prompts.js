@@ -151,7 +151,7 @@ export function buildPrompts() {
                                 text: `Produce an ${length}-minute podcast on "${topic}".\n\n` +
                                     `Workflow (orchestrate these tool calls in order):\n\n` +
                                     step1 +
-                                    `${step1n}. Script the podcast via venice_chat with model="claude-sonnet-4-6" (premium reasoning) — ${length} minutes = ≈${length * 150} words. Output as speaker-notes, timestamps, and a [TTS] marker for any line that should be spoken aloud.\n` +
+                                    `${step1n}. Script the podcast via venice_chat with model="qwen-3-7-max" (premium reasoning) — ${length} minutes = ≈${length * 150} words. Output as speaker-notes, timestamps, and a [TTS] marker for any line that should be spoken aloud.\n` +
                                     `${step1n + 1}. Extract the spoken portion and TTS it: venice_tts({ input: <script>, voice: ${voice ? `"${voice}"` : 'tts-kokoro default'}, model: "tts-kokoro" }). Capture the audio URL.\n` +
                                     `${step1n + 2}. (Optional) venice_audio_quote({ duration_seconds: ${length * 60} }) — show the cost pre-render.\n\n` +
                                     `Deliverable: a 2-section response — (A) the podcast script + timestamps, (B) the TTS audio URL.`.replace(/3\./, step1n + '.').replace(/3\./, step1n + '.'),
@@ -184,7 +184,7 @@ export function buildPrompts() {
                             content: {
                                 type: 'text',
                                 text: `Compose a hero poster for "${subject}".\n\nWorkflow:\n\n` +
-                                    `1. venice_chat({ messages: [{ role: "user", content: "Write a single dense image-generation prompt for a ${ratio} hero poster about '${subject}'. Tone: ${mood ?? 'editorial'}. Palette: ${palette ?? 'auto'}. Include composition suggestions and lighting." }], model: "claude-sonnet-4-6" }) → captures the polished prompt.\n` +
+                                    `1. venice_chat({ messages: [{ role: "user", content: "Write a single dense image-generation prompt for a ${ratio} hero poster about '${subject}'. Tone: ${mood ?? 'editorial'}. Palette: ${palette ?? 'auto'}. Include composition suggestions and lighting." }], model: "qwen-3-7-max" }) → captures the polished prompt.\n` +
                                     `2. venice_image_generate({ prompt: <step 1 output>, model: "flux-2-pro", aspect_ratio: "${ratio == '16:9' ? '16:9' : ratio}", steps: 35 }).\n` +
                                     `3. (Optional) venice_image_remove_bg({ image_url: <step 2 image> }) — if no background is wanted.\n` +
                                     upBlock +
