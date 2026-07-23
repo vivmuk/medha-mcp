@@ -10,8 +10,25 @@
  * This helper inserts the operator-preferences line BEFORE whichever of
  * the four suffixes the upstream description already has, so the pref
  * text reads naturally and the auth/NSFW tail remains authoritative.
+ *
+ * Dynamic preset wiring:
+ *   The active pref map is set per MCP session by the HTTP transport
+ *   (via `setActiveToolPrefs()`) and falls back to the baked static map
+ *   from presets.ts before any session has called the setter. This way
+ *   /admin POST changes to mcp_settings overlay the next MCP session's
+ *   tool descriptions without redeploys.
  */
-import { renderPref } from './presets.js'
+import { TOOL_PREFS as BAKED_TOOL_PREFS, renderPref, type ToolPref } from './presets.js'
+
+let activeToolPrefs: Record<string, ToolPref> | null = null
+
+export function setActiveToolPrefs(prefs: Record<string, ToolPref>): void {
+  activeToolPrefs = prefs
+}
+
+export function getActiveToolPrefs(): Record<string, ToolPref> {
+  return activeToolPrefs ?? BAKED_TOOL_PREFS
+}
 
 /** Tail patterns that indicate where to splice in the operator prefs. */
 const TAIL_PATTERNS: RegExp[] = [
@@ -22,7 +39,8 @@ const TAIL_PATTERNS: RegExp[] = [
 ]
 
 export function decorateDescription(name: string, description: string): string {
-  const pref = renderPref(name)
+  const map = activeToolPrefs ?? BAKED_TOOL_PREFS
+  const pref = renderPref(name, map)
   if (!pref) return description
 
   for (const pat of TAIL_PATTERNS) {

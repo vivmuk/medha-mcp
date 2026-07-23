@@ -1,10 +1,18 @@
 import express from 'express'
+import { existsSync, statSync } from 'node:fs'
+import { join } from 'node:path'
 import type { Request, Response } from 'express'
 import { randomUUID, timingSafeEqual } from 'node:crypto'
 import { isIP } from 'node:net'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { buildServer } from '../server.js'
 import { logMcpHttpCall } from '../logging.js'
+import { setActiveToolPrefs } from '../tool-descriptions.js'
+import { getEffectiveToolPrefs } from '../presets-runtime.js'
+import { ensureDbReady } from '../db.js'
+import { buildAdminRouter } from '../admin.js'
+import { VeniceClient } from '../venice-client.js'
+import { loadConfig } from '../config.js'
 
 const DEFAULT_MAX_HTTP_SESSIONS = 100
 const DEFAULT_SESSION_TTL_MS = 30 * 60 * 1000
@@ -85,6 +93,12 @@ export async function runHttp(opts: { port?: number; host?: string } = {}): Prom
   const maxSessions = parsePositiveInt(process.env.VENICE_MCP_MAX_SESSIONS, DEFAULT_MAX_HTTP_SESSIONS)
   const sessionTtlMs = parsePositiveInt(process.env.VENICE_MCP_SESSION_TTL_MS, DEFAULT_SESSION_TTL_MS)
 
+  // Boot DB lazily (don't delay listener if DATABASE_URL not set).
+  void ensureDbReady().catch((err) => {
+    // eslint-disable-next-line no-console
+    console.error('[venice-mcp] ensureDbReady failed:', err)
+  })
+
   const cleanupExpiredSessions = () => {
     const now = Date.now()
     for (const [sid, entry] of sessions) {
@@ -96,6 +110,23 @@ export async function runHttp(opts: { port?: number; host?: string } = {}): Prom
   }
 
   app.get('/healthz', (_req, res) => res.json({ ok: true, name: '@veniceai/mcp-server' }))
+
+  // ─── /admin  ──────────────────────────────────────────────
+  // REST API (admin/*.ts) and SPA (public/index.html + assets).
+  const adminClient = new VeniceClient(loadConfig())
+  app.use('/admin/api', buildAdminRouter(adminClient))
+
+  const publicDir = process.env.MEDHA_PUBLIC_DIR || '/app/public'
+  const indexPath = join(publicDir, 'index.html')
+  if (existsSync(indexPath) && statSync(indexPath).isFile()) {
+    app.use('/admin/assets', express.static(join(publicDir, 'assets'), { maxAge: '1h' }))
+    app.get('/admin', (_req, res) => res.sendFile(indexPath))
+    app.get('/admin/', (_req, res) => res.sendFile(indexPath))
+  } else {
+    app.get('/admin', (_req, res) => {
+      res.status(503).type('text/plain').send('admin SPA not built — `npm run build` and redeploy.')
+    })
+  }
 
   app.all('/mcp', async (req, res) => {
     try {
@@ -126,6 +157,15 @@ export async function runHttp(opts: { port?: number; host?: string } = {}): Prom
           return
         }
         const sessionId = randomUUID()
+        // Refresh dynamic preset overlay on every new session so admin
+        // edits in the last few seconds land on the new MCP session's
+        // tools/list descriptions automatically.
+        try {
+          setActiveToolPrefs(await getEffectiveToolPrefs())
+        } catch (err) {
+          // eslint-disable-next-line no-console
+          console.error('[venice-mcp] failed to load dynamic presets:', err)
+        }
         const newTransport = new StreamableHTTPServerTransport({
           sessionIdGenerator: () => sessionId,
           onsessioninitialized: (sid: string) => {
@@ -167,8 +207,10 @@ export async function runHttp(opts: { port?: number; host?: string } = {}): Prom
   })
   // eslint-disable-next-line no-console
   console.error(`[venice-mcp] listening on http://${host}:${port}/mcp`)
+  // eslint-disable-next-line no-console
+  console.error(`[venice-mcp] admin SPA + API at http://${host}:${port}/admin (set ADMIN_TOKEN env to enable)`)
   if (!isLoopbackHost(host)) {
     // eslint-disable-next-line no-console
-    console.error(`[venice-mcp] WARNING: bound to ${host} — server is reachable beyond loopback. Keep VENICE_MCP_AUTH_TOKEN set or use a trusted authenticated proxy.`)
+    console.error(`[venice-mcp] WARNING: bound to ${host} — server is reachable beyond loopback. Keep VENICE_MCP_AUTH_TOKEN and ADMIN_TOKEN set or use a trusted authenticated proxy.`)
   }
 }

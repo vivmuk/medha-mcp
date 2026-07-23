@@ -15,12 +15,13 @@ FROM node:22-alpine
 WORKDIR /app
 ENV NODE_ENV=production
 LABEL org.opencontainers.image.title="Medhā MCP"
-LABEL org.opencontainers.image.description="Operator-tuned Venice AI MCP server (fork of @veniceai/mcp-server)"
+LABEL org.opencontainers.image.description="Operator-tuned Venice AI MCP server (fork of @veniceai/mcp-server). Includes /admin SPA for live default-model editing via Postgres-backed mcp_settings overlay."
 LABEL org.opencontainers.image.vendor="vivmuk"
 LABEL org.opencontainers.image.source="https://github.com/vivmuk/medha-mcp"
-LABEL org.opencontainers.image.version="0.3.0-medha"
+LABEL org.opencontainers.image.version="0.6.0-medha"
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
+COPY public ./public
 COPY package.json ./
 EXPOSE 3333
 ENV VENICE_MCP_HTTP=1

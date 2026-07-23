@@ -149,10 +149,14 @@ export const TOOL_PREFS: Record<string, ToolPref> = {
  * Render the operator-prefs hint as a single sentence for inclusion in a
  * tool description. Returns empty string when no preference is registered.
  *
+ * Optional `map` arg lets the caller (e.g. tool-descriptions.ts when active
+ * preset has been overlaid via /admin) use a different source map than the
+ * baked `TOOL_PREFS`.
+ *
  * Format: "Operator preferences: <default>. Also try: <a1>, <a2>, <a3>. <hint>"
  */
-export function renderPref(name: string): string {
-  const p = TOOL_PREFS[name]
+export function renderPref(name: string, map: Record<string, ToolPref> = TOOL_PREFS): string {
+  const p = map[name]
   if (!p) return ''
   const parts: string[] = []
   if (p.defaultModel && p.defaultModel !== '-') {

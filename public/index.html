@@ -1,0 +1,871 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>VivMCP · Admin</title>
+<style>
+:root {
+  --bg: #0a1428;
+  --bg2: #0f1d36;
+  --panel: #122543;
+  --panel2: #1a2e54;
+  --line: rgba(0,212,255,0.18);
+  --cyan: #00d4ff;
+  --gold: #fbbf24;
+  --mint: #34d399;
+  --rose: #fb7185;
+  --imp: #a78bfa;     /* image */
+  --vid: #f472b6;     /* video */
+  --aud: #c084fc;     /* audio */
+  --mus: #f87171;     /* music */
+  --web: #fb923c;     /* web */
+  --txt: #e5e7eb;
+  --txt2: #94a3b8;
+  --txt3: #64748b;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--txt); font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif; font-size: 14px; line-height: 1.45; min-height: 100%; }
+a { color: var(--cyan); text-decoration: none; }
+button { font-family: inherit; cursor: pointer; }
+code, pre { font-family: 'JetBrains Mono', 'SF Mono', 'Menlo', Consolas, monospace; }
+
+/* Background */
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(800px 600px at 15% -10%, rgba(0,212,255,0.07), transparent 60%),
+    radial-gradient(700px 500px at 95% 0%, rgba(251,191,36,0.06), transparent 60%);
+  filter: blur(0px);
+}
+
+/* Layout */
+header.topbar {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; gap: 18px;
+  padding: 12px 22px;
+  background: rgba(10,20,40,0.85);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; align-items: center; gap: 12px; }
+.brand .logo {
+  width: 28px; height: 28px; border-radius: 7px;
+  background: linear-gradient(135deg, var(--cyan), var(--gold));
+  display: grid; place-items: center; color: var(--bg); font-weight: 800; font-size: 14px;
+}
+.brand .name { font-weight: 700; letter-spacing: 0.3px; font-size: 15px; }
+.brand .name .accent { color: var(--cyan); }
+.brand .ver { color: var(--txt3); font-size: 12px; margin-left: 4px; }
+
+.token-bar { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.token-bar input {
+  background: var(--panel); border: 1px solid var(--line); color: var(--txt);
+  border-radius: 6px; padding: 7px 10px; font-family: 'JetBrains Mono', monospace;
+  width: 260px; font-size: 12px;
+}
+.token-bar input:focus { outline: 2px solid var(--cyan); border-color: transparent; }
+.token-bar button {
+  background: var(--cyan); color: var(--bg); border: 0; border-radius: 6px;
+  padding: 7px 12px; font-weight: 600; font-size: 12px;
+}
+.token-bar button:hover { filter: brightness(1.1); }
+.token-warning { color: var(--rose); font-size: 12px; }
+
+/* Tabs */
+nav.tabs {
+  display: flex; gap: 2px;
+  padding: 14px 22px 0;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg2);
+  overflow-x: auto;
+}
+nav.tabs button {
+  background: transparent; color: var(--txt2);
+  border: 0; border-bottom: 2px solid transparent;
+  padding: 12px 16px; font-size: 13px; font-weight: 500;
+  white-space: nowrap; transition: 0.12s;
+}
+nav.tabs button:hover { color: var(--txt); }
+nav.tabs button.active {
+  color: var(--cyan); border-bottom-color: var(--cyan); font-weight: 600;
+}
+
+main.content { padding: 22px; max-width: 1400px; margin: 0 auto; position: relative; z-index: 1; }
+
+.section-title { font-size: 17px; font-weight: 700; margin: 0 0 4px; letter-spacing: 0.2px; }
+.section-sub { color: var(--txt2); font-size: 13px; margin: 0 0 16px; }
+
+.grid { display: grid; gap: 18px; }
+.grid-2 { grid-template-columns: 1fr 1fr; }
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 880px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+.card {
+  background: linear-gradient(180deg, var(--panel) 0%, var(--panel2) 100%);
+  border: 1px solid var(--line); border-radius: 12px;
+  padding: 16px 18px;
+}
+.card.flush { padding: 0; overflow: hidden; }
+.card.flush .card-head, .card.flush .card-body { padding: 16px 18px; }
+.card .card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.card .card-head .badge {
+  padding: 3px 8px; border-radius: 4px;
+  font-size: 11px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase;
+  background: rgba(0,212,255,0.12); color: var(--cyan);
+}
+.card .card-head .name { font-size: 13px; font-weight: 600; }
+.card .card-head .tool-name { font-family: 'JetBrains Mono', monospace; color: var(--txt2); font-size: 12px; margin-left: auto; }
+.card .card-body .form-row { display: flex; gap: 10px; align-items: center; padding: 6px 0; }
+.card .card-body .form-row label {
+  flex-shrink: 0; min-width: 130px; color: var(--txt2); font-size: 12px; font-weight: 500;
+}
+.card .card-body .form-row select, .card .card-body .form-row input {
+  flex: 1; background: var(--bg2); border: 1px solid var(--line); color: var(--txt);
+  border-radius: 6px; padding: 7px 9px; font-family: inherit; font-size: 12px;
+}
+.card .card-body .form-row select:focus, .card .card-body .form-row input:focus {
+  outline: 2px solid var(--cyan); border-color: transparent;
+}
+button.save {
+  background: var(--cyan); color: var(--bg); border: 0; border-radius: 6px;
+  padding: 6px 12px; font-weight: 600; font-size: 11px; margin-left: 6px;
+}
+button.save:hover { filter: brightness(1.1); }
+button.reset { background: transparent; color: var(--txt2); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 11px; font-weight: 500; }
+button.reset:hover { color: var(--rose); border-color: var(--rose); }
+
+.hint-box {
+  color: var(--txt2); font-size: 12px; font-style: italic;
+  padding: 8px 10px; border-left: 2px solid var(--gold);
+  background: rgba(251,191,36,0.05); border-radius: 0 6px 6px 0;
+  margin-bottom: 6px; line-height: 1.5;
+}
+
+.kpi-row { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.kpi {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  padding: 12px 14px; min-width: 130px; flex: 1; display: flex; flex-direction: column; gap: 2px;
+}
+.kpi .label { color: var(--txt2); font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.4px; }
+.kpi .value { color: var(--cyan); font-size: 22px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+.kpi .delta { color: var(--txt3); font-size: 11px; }
+
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+table thead th {
+  text-align: left; padding: 10px 12px;
+  color: var(--txt2); font-weight: 600; font-size: 11px;
+  text-transform: uppercase; letter-spacing: 0.4px;
+  border-bottom: 1px solid var(--line);
+  position: sticky; top: 0; background: var(--panel);
+}
+table tbody tr { border-bottom: 1px solid var(--line); }
+table tbody tr:hover { background: rgba(0,212,255,0.04); }
+table tbody td { padding: 9px 12px; }
+table tr.err { color: var(--rose); }
+.mod-tool { font-family: 'JetBrains Mono', monospace; }
+.mono { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+.muted { color: var(--txt2); }
+.empty { padding: 36px; text-align: center; color: var(--txt3); font-style: italic; }
+
+.toast {
+  position: fixed; bottom: 22px; right: 22px; z-index: 1000;
+  background: var(--panel2); border: 1px solid var(--line); border-radius: 8px;
+  padding: 10px 14px; font-size: 12px; min-width: 220px;
+  opacity: 0; transform: translateY(10px); transition: 0.2s;
+  border-left: 3px solid var(--cyan);
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+.toast.err { border-left-color: var(--rose); color: var(--rose); }
+.toast.ok { border-left-color: var(--mint); color: var(--mint); }
+
+.tag { padding: 2px 7px; border-radius: 4px; font-size: 10px; font-weight: 600; letter-spacing: 0.3px; text-transform: uppercase; display: inline-block; }
+.tag.chat { background: rgba(0,212,255,0.15); color: var(--cyan); }
+.tag.image { background: rgba(167,139,250,0.15); color: var(--imp); }
+.tag.video { background: rgba(244,114,182,0.15); color: var(--vid); }
+.tag.audio { background: rgba(192,132,252,0.15); color: var(--aud); }
+.tag.music { background: rgba(248,113,113,0.15); color: var(--mus); }
+.tag.web { background: rgba(251,146,60,0.15); color: var(--web); }
+.tag.embed { background: rgba(251,113,133,0.15); color: var(--rose); }
+.tag.crypto { background: rgba(148,163,184,0.15); color: #cbd5e1; }
+.tag.catalog { background: rgba(229,231,235,0.06); color: #cbd5e1; }
+.tag.utility { background: rgba(52,211,153,0.15); color: var(--mint); }
+
+.hint-row { font-size: 11px; color: var(--txt2); padding: 4px 0 6px; font-style: italic; }
+
+select.mc { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; }
+.filter {
+  background: var(--panel); border: 1px solid var(--line); color: var(--txt);
+  border-radius: 6px; padding: 7px 10px; font-size: 12px;
+}
+.search-wrap { position: relative; }
+.search-wrap input { padding-left: 28px; }
+.search-wrap::before {
+  content: '⌕'; position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+  color: var(--txt3); font-size: 14px;
+}
+
+.group-label {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+  color: var(--txt2); margin: 6px 0 8px;
+}
+.group-label::after {
+  content: ''; flex: 1; height: 1px; background: var(--line);
+}
+
+.toggle-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
+.toggle-row .field { display: flex; gap: 6px; align-items: center; }
+.toggle-row label { color: var(--txt2); font-size: 12px; }
+
+.cascade-banner {
+  background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.3);
+  border-radius: 8px; padding: 10px 14px; margin-bottom: 14px;
+  font-size: 12px; color: var(--mint);
+  display: flex; align-items: center; gap: 8px;
+}
+
+.patch-pill {
+  font-size: 10px; padding: 2px 8px; border-radius: 4px;
+  background: rgba(251,191,36,0.18); color: var(--gold);
+  display: inline-block; margin-left: 6px; font-weight: 600;
+}
+
+.scrollable { max-height: 70vh; overflow-y: auto; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <div class="logo">V</div>
+    <div>
+      <div class="name">Viv<span class="accent">MCP</span> <span class="ver" id="ver">…</span></div>
+    </div>
+  </div>
+  <div class="token-bar">
+    <input id="token" type="password" placeholder="ADMIN_TOKEN (paste bearer)" autocomplete="off" />
+    <button id="save-token">Save</button>
+    <span id="token-status" class="token-warning" style="display:none">⚠ set admin token</span>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button data-tab="defaults" class="active">Defaults</button>
+  <button data-tab="catalog">Catalog</button>
+  <button data-tab="hints">Env Hints</button>
+  <button data-tab="quick">Quick Defaults</button>
+  <button data-tab="calls">Calls</button>
+  <button data-tab="artifacts">Artifacts</button>
+  <button data-tab="spend">Spend</button>
+  <button data-tab="status">Status</button>
+</nav>
+
+<main class="content">
+
+<!-- ─── DEFAULTS ────────────────────────────────────────────────── -->
+<section id="tab-defaults">
+  <h2 class="section-title">Tool Default Models</h2>
+  <p class="section-sub">Change the default model for any tool. Saved changes overlay the next MCP session's <code>tools/list</code> descriptions.</p>
+
+  <div class="cascade-banner" id="defaults-cascade">
+    <strong>✓ Cascade active</strong> — dropdown changes write <code>mcp_settings</code> in Postgres, hot-reload on every new MCP session.
+  </div>
+
+  <div class="grid grid-3" id="defaults-grid"></div>
+</section>
+
+<!-- ─── CATALOG ─────────────────────────────────────────────────── -->
+<section id="tab-catalog" style="display:none">
+  <h2 class="section-title">Venice Model Catalog</h2>
+  <p class="section-sub">Live from <code>api.venice.ai</code>. Filter by type / capability.</p>
+  <div class="toggle-row">
+    <div class="field"><label>Type</label>
+      <select id="cat-type" class="filter"><option value="">all</option><option value="text">text</option><option value="image">image</option><option value="embedding">embedding</option></select>
+    </div>
+    <div class="field"><label>Capability</label>
+      <select id="cat-cap" class="filter">
+        <option value="">all</option>
+        <option value="web_search">web_search</option>
+        <option value="vision">vision</option>
+        <option value="reasoning">reasoning</option>
+        <option value="uncensored">uncensored</option>
+        <option value="function_calling">function_calling</option>
+        <option value="code_completion">code_completion</option>
+      </select>
+    </div>
+    <div class="field"><label>Tier</label>
+      <select id="cat-tier" class="filter">
+        <option value="">all</option>
+        <option value="cheap">cheap</option>
+        <option value="best">best</option>
+        <option value="longctx">longctx</option>
+        <option value="coding">coding</option>
+      </select>
+    </div>
+    <div class="field search-wrap" style="margin-left:auto"><input id="cat-search" class="filter" placeholder="search by id…" /></div>
+  </div>
+  <div class="card flush scrollable">
+    <table id="cat-table">
+      <thead><tr><th>id</th><th>type</th><th>spec</th><th>pricing (USD/M in/out)</th><th>tags</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ─── ENV HINTS (environmentHints block) ─────────────────────── -->
+<section id="tab-hints" style="display:none">
+  <h2 class="section-title">Env Hints (per-domain guidance)</h2>
+  <p class="section-sub">Free-form strings surfaced in the <code>medha://favorites</code> resource per category. The agent reads these when picking models for a domain.</p>
+  <div class="grid grid-2" id="hints-grid"></div>
+</section>
+
+<!-- ─── QUICK DEFAULTS (VENICE_*_DEFAULT env-var style) ────────── -->
+<section id="tab-quick" style="display:none">
+  <h2 class="section-title">Quick Defaults (VENICE_DEFAULT_*)</h2>
+  <p class="section-sub">Runtime defaults for tools that omit <code>model=</code>. Stored in <code>mcp_settings</code>; takes effect on next MCP session.</p>
+  <div class="grid grid-2" id="quick-grid"></div>
+  <p class="muted" style="margin-top:18px;font-size:11px">Persisted in postgres, but Railway <code>VENICE_DEFAULT_*</code> env vars still take precedence at container boot. Use this for lightweight runtime tweaks without a redeploy.</p>
+</section>
+
+<!-- ─── CALLS ────────────────────────────────────────────────────── -->
+<section id="tab-calls" style="display:none">
+  <h2 class="section-title">Call History</h2>
+  <p class="section-sub">Every JSON-RPC request — last 24h, grouped by hour.</p>
+  <div class="toggle-row">
+    <div class="field"><label>Limit</label><input id="calls-limit" class="filter" type="number" min="10" max="500" value="100" style="width:90px" /></div>
+    <div class="field"><label>Tool</label><input id="calls-tool" class="filter" placeholder="venice_chat" /></div>
+    <div class="field"><label>Since (hours)</label><input id="calls-hours" class="filter" type="number" min="1" max="720" value="24" style="width:90px" /></div>
+    <button id="calls-refresh" class="save">↻ Refresh</button>
+  </div>
+  <div class="kpi-row" id="calls-kpi"></div>
+  <div class="card flush scrollable">
+    <table id="calls-table">
+      <thead><tr><th>ts</th><th>tool</th><th>method</th><th>status</th><th>latency</th><th>client</th><th>bearer</th><th>error</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ─── ARTIFACTS ───────────────────────────────────────────────── -->
+<section id="tab-artifacts" style="display:none">
+  <h2 class="section-title">Generated Artifacts</h2>
+  <p class="section-sub">Every image / audio / music / scrape URL persisted from the response.</p>
+  <div class="toggle-row">
+    <div class="field"><label>Limit</label><input id="art-limit" class="filter" type="number" min="10" max="500" value="100" style="width:90px" /></div>
+    <div class="field"><label>Kind</label>
+      <select id="art-kind" class="filter"><option value="">all</option><option value="image">image</option><option value="audio">audio</option><option value="video">video</option><option value="music">music</option><option value="embedding">embedding</option><option value="text">text</option><option value="content">content</option></select>
+    </div>
+    <button id="art-refresh" class="save">↻ Refresh</button>
+  </div>
+  <div class="card flush scrollable">
+    <table id="art-table">
+      <thead><tr><th>ts</th><th>kind</th><th>model</th><th>size</th><th>mime</th><th>prompt (preview)</th><th>url</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ─── SPEND ───────────────────────────────────────────────────── -->
+<section id="tab-spend" style="display:none">
+  <h2 class="section-title">Spend &amp; Activity</h2>
+  <p class="section-sub">Calls per hour, by tool & bearer. (USD cost requires Venice billing API; this view counts calls + errors + latency.)</p>
+  <div class="toggle-row">
+    <div class="field"><label>Since (hours)</label><input id="spend-hours" class="filter" type="number" min="1" max="720" value="24" style="width:90px" /></div>
+    <button id="spend-refresh" class="save">↻ Refresh</button>
+  </div>
+  <div class="card flush scrollable">
+    <table id="spend-table">
+      <thead><tr><th>hour</th><th>tool</th><th>bearer</th><th>count</th><th>avg latency</th><th>errors</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ─── STATUS ──────────────────────────────────────────────────── -->
+<section id="tab-status" style="display:none">
+  <h2 class="section-title">Server Status</h2>
+  <p class="section-sub">Health, version, env, DB state.</p>
+  <pre id="status-json" class="mono" style="color:var(--mint);font-size:12px;line-height:1.6;background:var(--panel);padding:14px;border-radius:8px;overflow-x:auto"></pre>
+</section>
+
+</main>
+
+<div id="toast" class="toast"></div>
+
+<script>
+"use strict";
+
+// ─── State ────────────────────────────────────────────────────────
+const state = {
+  token: localStorage.getItem('vivmcp_admin_token') || '',
+  catalog: null,
+  presets: null,
+  settings: null,
+};
+
+// ─── DOM helpers ──────────────────────────────────────────────────
+const $ = (sel, root = document) => root.querySelector(sel);
+const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+function toast(msg, kind = '') {
+  const el = $('#toast');
+  el.className = 'toast show ' + (kind || '');
+  el.textContent = msg;
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+function api(path, opts = {}) {
+  const headers = { 'content-type': 'application/json' };
+  if (state.token) headers.authorization = `Bearer ${state.token}`;
+  return fetch(path, { ...opts, headers: { ...headers, ...(opts.headers || {}) } })
+    .then(async (r) => {
+      const text = await r.text();
+      if (!r.ok) {
+        let body;
+        try { body = JSON.parse(text); } catch { body = { raw: text }; }
+        throw new Error(body.error || JSON.stringify(body) || `HTTP ${r.status}`);
+      }
+      return text ? JSON.parse(text) : null;
+    });
+}
+
+// ─── Tab switching ───────────────────────────────────────────────
+$$('nav.tabs button').forEach((btn) => {
+  btn.addEventListener('click', async () => {
+    $$('nav.tabs button').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    const tab = btn.dataset.tab;
+    $$('main.content > section').forEach((s) => { s.style.display = 'none'; });
+    $(`#tab-${tab}`).style.display = '';
+    if (tab === 'catalog' && !state.catalog) await loadCatalog();
+    if (tab === 'defaults' && !state.presets) await loadPresets();
+    if (tab === 'hints') await loadHints();
+    if (tab === 'quick') await loadQuick();
+    if (tab === 'calls') await refreshCalls();
+    if (tab === 'artifacts') await refreshArtifacts();
+    if (tab === 'spend') await refreshSpend();
+    if (tab === 'status') await loadStatus();
+  });
+});
+
+// ─── Token save ───────────────────────────────────────────────────
+$('#save-token').addEventListener('click', () => {
+  state.token = $('#token').value.trim();
+  localStorage.setItem('vivmcp_admin_token', state.token);
+  $('#token-status').style.display = state.token ? 'none' : '';
+  toast(state.token ? 'Token saved.' : 'Token cleared.', 'ok');
+  // Re-fetch current tab data
+  document.querySelector('nav.tabs button.active').click();
+});
+
+$('#token').value = state.token;
+$('#token-status').style.display = state.token ? 'none' : '';
+$('#token').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('#save-token').click(); });
+
+// ─── Errors-as-data → status bar ────────────────────────────────
+function handleErr(e, ctx) { toast(`${ctx}: ${e.message}`, 'err'); console.error(ctx, e); }
+
+// ─── Tool category mapping (display labels + colors) ─────────────
+const TOOL_CATEGORIES = {
+  venice_chat: ['chat', 'Text / Reasoning'],
+  venice_responses: ['chat', 'Text / Reasoning (Responses API)'],
+  venice_embeddings: ['embed', 'Embeddings'],
+  venice_image_generate: ['image', 'Image — generate'],
+  venice_image_edit: ['image', 'Image — edit'],
+  venice_image_multi_edit: ['image', 'Image — multi-edit'],
+  venice_image_upscale: ['image', 'Image — upscale'],
+  venice_image_remove_bg: ['image', 'Image — remove-bg'],
+  venice_image_styles: ['catalog', 'Image — styles list'],
+  venice_video_generate: ['video', 'Video — generate'],
+  venice_video_status: ['video', 'Video — status'],
+  venice_video_complete: ['video', 'Video — complete'],
+  venice_video_transcriptions: ['video', 'Video — transcribe'],
+  venice_video_quote: ['video', 'Video — quote'],
+  venice_tts: ['audio', 'Audio — TTS'],
+  venice_asr: ['audio', 'Audio — ASR'],
+  venice_voice_clone: ['audio', 'Audio — voice clone'],
+  venice_audio_quote: ['audio', 'Audio — quote'],
+  venice_music_generate: ['music', 'Music — generate'],
+  venice_music_status: ['music', 'Music — status'],
+  venice_music_complete: ['music', 'Music — complete'],
+  venice_web_search: ['web', 'Web — search'],
+  venice_web_scrape: ['web', 'Web — scrape'],
+  venice_text_parser: ['web', 'Text — parse document'],
+  venice_list_models: ['catalog', 'Catalog — list models'],
+  venice_list_characters: ['catalog', 'Catalog — list characters'],
+  venice_chat_with_character: ['chat', 'Chat — w/ character'],
+  venice_crypto_rpc: ['crypto', 'Crypto — RPC'],
+};
+const KNOWN_HINT_CATEGORIES = ['reasoning', 'coding', 'roleplay', 'vision', 'longctx'];
+const QUICK_KEYS = [
+  { key: 'chat',  label: 'Chat (default model)',  env: 'VENICE_DEFAULT_CHAT_MODEL'  },
+  { key: 'image', label: 'Image (default model)', env: 'VENICE_DEFAULT_IMAGE_MODEL' },
+  { key: 'video', label: 'Video (default model)', env: 'VENICE_DEFAULT_VIDEO_MODEL' },
+  { key: 'tts',   label: 'TTS (default model)',   env: 'VENICE_DEFAULT_TTS_MODEL'   },
+  { key: 'asr',   label: 'ASR (default model)',   env: 'VENICE_DEFAULT_ASR_MODEL'   },
+  { key: 'music', label: 'Music (default model)', env: 'VENICE_DEFAULT_MUSIC_MODEL' },
+  { key: 'embed', label: 'Embed (default model)', env: 'VENICE_DEFAULT_EMBED_MODEL' },
+];
+
+// ─── Catalog ──────────────────────────────────────────────────────
+async function loadCatalog() {
+  try {
+    const data = await api('/admin/api/catalog');
+    state.catalog = (data && data.data) || [];
+    renderCatalog();
+  } catch (e) { handleErr(e, 'catalog'); }
+}
+async function renderCatalog() {
+  const type = $('#cat-type').value;
+  const cap = $('#cat-cap').value;
+  const tier = $('#cat-tier').value;
+  const q = ($('#cat-search').value || '').toLowerCase().trim();
+  const capMap = { web_search: 'web_search', vision: 'image_input', reasoning: 'reasoning', uncensored: 'uncensored', function_calling: 'function_calling', code_completion: 'code_completion_status' };
+
+  const tbody = $('#cat-table tbody');
+  tbody.innerHTML = '';
+  let shown = 0;
+  for (const m of state.catalog) {
+    if (type && m.type !== type) continue;
+    const idsMatch = !q || m.id.toLowerCase().includes(q);
+    if (!idsMatch) continue;
+    const caps = (((m.model_specs || {}).capabilities) || []);
+    if (cap && !caps.includes(capMap[cap] || cap)) continue;
+    if (tier && !(m.tags || []).includes(tier)) continue;
+    shown++;
+    const tags = (m.tags || []).map((t) => `<span class="tag ${tagClass(t)}">${t}</span>`).join(' ');
+    const price = (() => {
+      const p = (((m.model_specs || {}).pricing) || {}).usd_per_million_tokens || {};
+      const i = p.input || 0, o = p.output || 0;
+      return `<span class="mono">${i.toFixed(2)} / ${o.toFixed(2)}</span>`;
+    })();
+    const caps_short = caps.slice(0, 4).join(', ') + (caps.length > 4 ? ` +${caps.length-4}` : '');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="mono">${escapeHtml(m.id)}</td><td class="muted">${m.type || '?'}</td><td class="muted" style="font-size:11px">${escapeHtml(caps_short)}</td><td>${price}</td><td>${tags}</td>`;
+    tbody.appendChild(tr);
+  }
+  if (shown === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="empty">No models match the filters.</td></tr>`;
+  }
+  $('#cat-table').dataset.shown = shown;
+}
+function tagClass(t) {
+  if (['cheap', 'best', 'longctx', 'coding'].includes(t)) return 'utility';
+  return 'utility';
+}
+['cat-type','cat-cap','cat-tier','cat-search'].forEach((id) => $(`#${id}`).addEventListener('input', renderCatalog));
+
+// ─── Presets/Defaults tab ─────────────────────────────────────────
+async function loadPresets() {
+  try {
+    state.presets = await api('/admin/api/presets/effective');
+    state.settings = await api('/admin/api/settings');
+    renderPresets();
+  } catch (e) { handleErr(e, 'presets'); }
+}
+async function renderPresets() {
+  const grid = $('#defaults-grid');
+  grid.innerHTML = '';
+  if (!state.catalog) {
+    await loadCatalog();
+  }
+  const presetTools = state.presets.toolsByName || {};
+  const overlayKeys = new Set((state.settings.settings || []).map((s) => s.key));
+  const overlayTools = new Set([...overlayKeys].filter(k => k.startsWith('preset.')).map(k => k.slice(7)));
+
+  for (const [toolName, info] of Object.entries(presetTools).sort()) {
+    const [cat, friendly] = TOOL_CATEGORIES[toolName] || ['catalog', toolName];
+    const isOverridden = overlayTools.has(toolName);
+    const card = document.createElement('div');
+    card.className = 'card';
+    const opts = catalogByType(cat)
+      .map(m => `<option value="${escapeAttr(m.id)}">${escapeHtml(m.id)}</option>`).join('');
+    const hint = (info.hint || '').trim();
+    card.innerHTML = `
+      <div class="card-head">
+        <span class="tag ${cat}">${cat}</span>
+        <span class="name">${escapeHtml(friendly)}</span>
+        <span class="tool-name">${escapeHtml(toolName)}${isOverridden ? '<span class="patch-pill">override</span>' : ''}</span>
+      </div>
+      <div class="card-body">
+        ${hint ? `<div class="hint-box">💡 ${escapeHtml(hint)}</div>` : ''}
+        <div class="form-row">
+          <label>Default</label>
+          <select class="mc save-default" data-tool="${escapeAttr(toolName)}">
+            <option value="-">(no default)</option>
+            <option value="__baked__">— baked: ${escapeHtml(info.defaultModel || '-')} —</option>
+            ${opts}
+          </select>
+          <button class="save" data-tool="${escapeAttr(toolName)}">Save</button>
+        </div>
+        ${info.alternates && info.alternates.length ? `
+        <div class="form-row">
+          <label>Alternates</label>
+          <input class="save-alts" data-tool="${escapeAttr(toolName)}" value="${escapeAttr((info.alternates || []).join(', '))}" placeholder="comma-separated" />
+        </div>` : ''}
+        <div class="form-row">
+          <label>Hint (op.)</label>
+          <input class="save-hint" data-tool="${escapeAttr(toolName)}" value="${escapeAttr(info.hint || '')}" placeholder="operator hint" />
+        </div>
+        ${isOverridden ? `<button class="reset reset-tool" data-tool="${escapeAttr(toolName)}">Reset to baked defaults</button>` : ''}
+      </div>
+    `;
+    grid.appendChild(card);
+    // Pre-select default
+    const sel = card.querySelector('.save-default');
+    if (info.defaultModel && info.defaultModel !== '-') {
+      sel.value = info.defaultModel;
+      if (![...sel.options].some(o => o.value === info.defaultModel)) {
+        const opt = document.createElement('option');
+        opt.value = info.defaultModel; opt.textContent = `· ${info.defaultModel} (not in catalog)`;
+        sel.insertBefore(opt, sel.firstChild.nextSibling);
+        sel.value = info.defaultModel;
+      }
+    }
+  }
+
+  $$('.save[data-tool]').forEach((btn) => btn.addEventListener('click', () => saveTool(btn.dataset.tool)));
+  $$('.reset-tool').forEach((btn) => btn.addEventListener('click', () => resetTool(btn.dataset.tool)));
+}
+function catalogByType(type) {
+  // 'audio' maps to tts/asr/voice; 'embed' to embedding; etc.
+  const typeMap = { audio: 'text', music: 'text', web: 'text', crypto: 'text', embed: 'embedding' };
+  // For audio/music/web/etc the catalog may not have dedicated audio models; fall back to all.
+  const want = typeMap[type] || type;
+  return (state.catalog || []).filter((m) => m.type === want || type === 'audio' || type === 'music');
+}
+async function saveTool(toolName) {
+  const sel = $(`.save-default[data-tool="${cssEsc(toolName)}"]`);
+  const alts = $(`.save-alts[data-tool="${cssEsc(toolName)}"]`);
+  const hint = $(`.save-hint[data-tool="${cssEsc(toolName)}"]`);
+  const body = {
+    defaultModel: sel.value === '__baked__' ? undefined : sel.value,
+    alternates: alts ? alts.value.split(',').map(s => s.trim()).filter(Boolean) : undefined,
+    hint: hint ? hint.value : undefined,
+  };
+  Object.keys(body).forEach((k) => body[k] === undefined && delete body[k]);
+  try {
+    await api(`/admin/api/preset/${encodeURIComponent(toolName)}`, { method: 'PUT', body: JSON.stringify(body) });
+    toast(`Saved → ${toolName}`, 'ok');
+    await loadPresets();
+  } catch (e) { handleErr(e, `save ${toolName}`); }
+}
+async function resetTool(toolName) {
+  try {
+    await api(`/admin/api/preset/${encodeURIComponent(toolName)}`, { method: 'DELETE' });
+    toast(`Reset → ${toolName}`, 'ok');
+    await loadPresets();
+  } catch (e) { handleErr(e, `reset ${toolName}`); }
+}
+
+// ─── Hints tab ────────────────────────────────────────────────────
+async function loadHints() {
+  try {
+    const s = state.settings ? null : await api('/admin/api/settings');
+    if (!state.settings) state.settings = { settings: (s || {}).settings || [] };
+    const hintsObj = {};
+    if (state.presets) Object.assign(hintsObj, state.presets.environmentHints || {});
+    for (const row of (state.settings.settings || [])) {
+      if (row.key.startsWith('envHint.')) hintsObj[row.key.slice(8)] = row.value;
+    }
+    renderHints(hintsObj);
+  } catch (e) { handleErr(e, 'hints'); }
+}
+function renderHints(hints) {
+  const grid = $('#hints-grid');
+  grid.innerHTML = '';
+  const allCats = Array.from(new Set([...KNOWN_HINT_CATEGORIES, ...Object.keys(hints || {})])).sort();
+  for (const cat of allCats) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-head">
+        <span class="name">${escapeHtml(cat)}</span>
+      </div>
+      <div class="card-body">
+        <textarea class="save-hint-text" data-cat="${escapeAttr(cat)}" rows="3" style="width:100%;background:var(--bg2);border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:8px;font-family:inherit;font-size:12px;resize:vertical">${escapeHtml(hints[cat] || '')}</textarea>
+        <div style="margin-top:6px;display:flex;gap:6px">
+          <button class="save save-hint-btn" data-cat="${escapeAttr(cat)}">Save</button>
+          ${hints[cat] ? `<button class="reset reset-hint-btn" data-cat="${escapeAttr(cat)}">Reset</button>` : ''}
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  }
+  $$('.save-hint-btn').forEach((b) => b.addEventListener('click', () => saveHint(b.dataset.cat)));
+  $$('.reset-hint-btn').forEach((b) => b.addEventListener('click', () => delHint(b.dataset.cat)));
+}
+async function saveHint(cat) {
+  const ta = $(`.save-hint-text[data-cat="${cssEsc(cat)}"]`);
+  try {
+    await api(`/admin/api/env-hint/${encodeURIComponent(cat)}`, { method: 'PUT', body: JSON.stringify({ value: ta.value }) });
+    toast(`Saved → envHint.${cat}`, 'ok');
+    await loadHints();
+  } catch (e) { handleErr(e, `save hint ${cat}`); }
+}
+async function delHint(cat) {
+  try {
+    await api(`/admin/api/env-hint/${encodeURIComponent(cat)}`, { method: 'DELETE' });
+    toast(`Reset → envHint.${cat}`, 'ok');
+    await loadHints();
+  } catch (e) { handleErr(e, `delete hint ${cat}`); }
+}
+
+// ─── Quick Defaults tab ───────────────────────────────────────────
+async function loadQuick() {
+  try {
+    if (!state.settings) {
+      const s = await api('/admin/api/settings');
+      state.settings = { settings: (s || {}).settings || [] };
+    }
+    const vd = {};
+    for (const row of (state.settings.settings || [])) {
+      if (row.key === 'veniceDefaults') Object.assign(vd, row.value || {});
+    }
+    renderQuick(vd);
+  } catch (e) { handleErr(e, 'quick'); }
+}
+function renderQuick(vd) {
+  const grid = $('#quick-grid');
+  grid.innerHTML = '';
+  for (const q of QUICK_KEYS) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-head">
+        <span class="name">${escapeHtml(q.label)}</span>
+        <span class="tool-name">${escapeHtml(q.env)}</span>
+      </div>
+      <div class="card-body">
+        <div class="form-row">
+          <label>default</label>
+          <input class="save-quick" data-key="${escapeAttr(q.key)}" value="${escapeAttr(vd[q.key] || '')}" placeholder="(empty → use baked preset)" />
+          <button class="save save-quick-btn" data-key="${escapeAttr(q.key)}">Save</button>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  }
+  $$('.save-quick-btn').forEach((b) => b.addEventListener('click', () => saveQuick(b.dataset.key)));
+}
+async function saveQuick(key) {
+  const inp = $(`.save-quick[data-key="${cssEsc(key)}"]`);
+  try {
+    // Read current veniceDefaults from state.settings, mutate, save
+    let vd = {};
+    for (const row of (state.settings.settings || [])) {
+      if (row.key === 'veniceDefaults') vd = row.value || {};
+    }
+    if (inp.value.trim()) vd[key] = inp.value.trim();
+    else delete vd[key];
+    await api('/admin/api/venice-defaults', { method: 'PUT', body: JSON.stringify(vd) });
+    toast(`Saved → ${key}`, 'ok');
+    await loadQuick();
+  } catch (e) { handleErr(e, `save ${key}`); }
+}
+
+// ─── Calls ────────────────────────────────────────────────────────
+async function refreshCalls() {
+  try {
+    const limit = Number($('#calls-limit').value) || 100;
+    const tool = $('#calls-tool').value.trim();
+    const hours = Number($('#calls-hours').value) || 0;
+    const qs = new URLSearchParams();
+    qs.set('limit', String(limit));
+    if (tool) qs.set('tool', tool);
+    if (hours) qs.set('hours', String(hours));
+    const data = await api(`/admin/api/calls?${qs.toString()}`);
+    const calls = (data && data.calls) || [];
+    $('#calls-kpi').innerHTML = `
+      <div class="kpi"><span class="label">calls</span><span class="value">${calls.length}</span></div>
+      <div class="kpi"><span class="label">errors</span><span class="value" style="color:var(--rose)">${calls.filter(c => c.error_message).length}</span></div>
+      <div class="kpi"><span class="label">avg latency</span><span class="value">${Math.round(calls.reduce((s,c)=>s+(c.latency_ms||0),0) / Math.max(1,calls.length))}ms</span></div>
+      <div class="kpi"><span class="label">tools seen</span><span class="value">${new Set(calls.map(c=>c.tool_name).filter(Boolean)).size}</span></div>
+      <div class="kpi"><span class="label">bearer(s)</span><span class="value">${new Set(calls.map(c=>c.bearer_hash).filter(Boolean)).size}</span></div>
+    `;
+    const tbody = $('#calls-table tbody');
+    tbody.innerHTML = '';
+    for (const c of calls) {
+      const tr = document.createElement('tr');
+      if (c.error_message) tr.className = 'err';
+      tr.innerHTML = `<td class="mono">${formatTs(c.ts)}</td><td class="mono">${escapeHtml(c.tool_name || '—')}</td><td class="muted">${escapeHtml(c.method || '—')}</td><td>${c.status_code ?? '—'}</td><td class="mono">${c.latency_ms ?? '—'}ms</td><td>${escapeHtml(c.client_name || '—')}</td><td class="mono">${escapeHtml(c.bearer_hash || '—')}</td><td class="mono" style="color:var(--rose)" title="${escapeAttr(c.error_message||'')}">${escapeHtml(truncate((c.error_message||'').replace(/\n/g,' '), 80))}</td>`;
+      tbody.appendChild(tr);
+    }
+    if (!calls.length) tbody.innerHTML = `<tr><td colspan="8" class="empty">No calls in the selected range.</td></tr>`;
+  } catch (e) { handleErr(e, 'calls'); }
+}
+$('#calls-refresh').addEventListener('click', refreshCalls);
+
+// ─── Artifacts ────────────────────────────────────────────────────
+async function refreshArtifacts() {
+  try {
+    const limit = Number($('#art-limit').value) || 100;
+    const kind = $('#art-kind').value;
+    const qs = new URLSearchParams({ limit: String(limit) });
+    if (kind) qs.set('kind', kind);
+    const data = await api(`/admin/api/artifacts?${qs.toString()}`);
+    const arts = (data && data.artifacts) || [];
+    const tbody = $('#art-table tbody');
+    tbody.innerHTML = '';
+    for (const a of arts) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td class="mono">${formatTs(a.ts)}</td><td><span class="tag ${tagClassForKind(a.kind)}">${escapeHtml(a.kind)}</span></td><td class="mono">${escapeHtml(a.model || '—')}</td><td class="mono">${(a.byte_size ? formatBytes(a.byte_size) : '—')}</td><td class="muted">${escapeHtml(a.mime_type || '—')}</td><td class="muted" style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeAttr(a.prompt || '')}">${escapeHtml(truncate(a.prompt||'', 80))}</td><td><a href="${escapeAttr(a.venice_url || '#')}" target="_blank" rel="noopener">${a.venice_url ? '↗ url' : '—'}</a></td>`;
+      tbody.appendChild(tr);
+    }
+    if (!arts.length) tbody.innerHTML = `<tr><td colspan="7" class="empty">No artifacts.</td></tr>`;
+  } catch (e) { handleErr(e, 'artifacts'); }
+}
+$('#art-refresh').addEventListener('click', refreshArtifacts);
+function tagClassForKind(k) {
+  if (k === 'image') return 'image';
+  if (k === 'audio') return 'audio';
+  if (k === 'music') return 'music';
+  if (k === 'video') return 'video';
+  if (k === 'embedding') return 'embed';
+  return 'utility';
+}
+
+// ─── Spend ────────────────────────────────────────────────────────
+async function refreshSpend() {
+  try {
+    const hours = Number($('#spend-hours').value) || 24;
+    const data = await api(`/admin/api/spend?hours=${hours}`);
+    const rows = (data && data.rows) || [];
+    const tbody = $('#spend-table tbody');
+    tbody.innerHTML = '';
+    for (const r of rows) {
+      const tr = document.createElement('tr');
+      if (r.error_count > 0) tr.className = 'err';
+      tr.innerHTML = `<td class="mono">${formatTs(r.ts_hour)}</td><td class="mono">${escapeHtml(r.tool_name || '—')}</td><td class="mono">${escapeHtml(r.bearer_hash || '—')}</td><td class="mono">${r.call_count}</td><td class="mono">${r.avg_latency_ms ?? '—'}ms</td><td class="mono">${r.error_count}</td>`;
+      tbody.appendChild(tr);
+    }
+    if (!rows.length) tbody.innerHTML = `<tr><td colspan="6" class="empty">No activity in the last ${hours}h.</td></tr>`;
+  } catch (e) { handleErr(e, 'spend'); }
+}
+$('#spend-refresh').addEventListener('click', refreshSpend);
+
+// ─── Status ───────────────────────────────────────────────────────
+async function loadStatus() {
+  try {
+    const s = await api('/admin/api/status');
+    $('#status-json').textContent = JSON.stringify(s, null, 2);
+    $('#ver').textContent = 'v' + (s.version || '?');
+  } catch (e) { handleErr(e, 'status'); }
+}
+
+// ─── Utilities ────────────────────────────────────────────────────
+function escapeHtml(s=''){ return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function escapeAttr(s=''){ return String(s).replace(/["&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function cssEsc(s='') { return String(s).replace(/[^a-zA-Z0-9_-]/g, c => '\\' + c); }
+function truncate(s, n){ return s.length <= n ? s : s.slice(0, n - 1) + '…'; }
+function formatTs(t) { try { return new Date(t).toISOString().replace('T', ' ').replace(/\.\d+Z$/, 'Z'); } catch { return String(t); } }
+function formatBytes(b){ if (b < 1024) return b + 'B'; if (b < 1048576) return (b/1024).toFixed(1) + 'KB'; return (b/1048576).toFixed(2) + 'MB'; }
+
+// ─── Boot ─────────────────────────────────────────────────────────
+// On load, kick off presets first (drives the default tab).
+loadPresets().then(() => { $('#ver').textContent = 'v' + (state.presets.server || ''); }).catch(() => {});
+
+</script>
+</body>
+</html>
