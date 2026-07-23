@@ -22,6 +22,8 @@ LABEL org.opencontainers.image.version="0.6.0-medha"
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build /app/dist ./dist
 COPY public ./public
+# Make SPA readable by the runtime USER (node).
+RUN chmod -R a+rx /app/public
 COPY package.json ./
 EXPOSE 3333
 ENV VENICE_MCP_HTTP=1

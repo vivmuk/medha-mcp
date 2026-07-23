@@ -16,7 +16,7 @@ export function loadConfig(env = process.env) {
         timeoutMs: parseTimeoutMs(env.VENICE_HTTP_TIMEOUT_MS),
         enableNsfw: env.VENICE_DISABLE_NSFW !== '1',
         serverName: env.MEDHA_SERVER_NAME?.trim() || '@medha/mcp-server',
-        serverVersion: env.MEDHA_SERVER_VERSION?.trim() || '0.4.0-medha',
+        serverVersion: env.MEDHA_SERVER_VERSION?.trim() || '0.6.0-medha',
     };
 }
 //# sourceMappingURL=config.js.map
